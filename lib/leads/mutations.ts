@@ -108,7 +108,7 @@ export async function upsertLeads(incoming: Lead[]): Promise<{ added: number; up
     // Dedup: match on phoneRaw OR (businessName + city)
     const idx = merged.findIndex(
       (e) =>
-        (lead.phoneRaw && e.phoneRaw && e.phoneRaw === lead.phoneRaw) ||
+        (lead.phone && e.phone && e.phone === lead.phone) ||
         (e.businessName.toLowerCase() === lead.businessName.toLowerCase() &&
           e.city.toLowerCase() === lead.city.toLowerCase())
     );
