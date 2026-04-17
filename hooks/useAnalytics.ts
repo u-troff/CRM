@@ -64,11 +64,13 @@ export function useAnalytics(leads: Lead[]) {
     });
 
     // Daily dials — last 14 days
-    const now = Date.now();
     const msPerDay = 86400000;
+    const todayMidnight = new Date();
+    todayMidnight.setUTCHours(0, 0, 0, 0);
+    const todayStart = todayMidnight.getTime();
     const days: DayBucket[] = [];
     for (let i = 13; i >= 0; i--) {
-      const dayStart = now - i * msPerDay;
+      const dayStart = todayStart - i * msPerDay;
       const dayEnd = dayStart + msPerDay;
       const date = new Date(dayStart).toISOString().split("T")[0];
       const count = allAttempts.filter(

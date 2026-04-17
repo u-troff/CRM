@@ -12,6 +12,8 @@ function shortDate(isoDate: string): string {
   return d.toLocaleDateString("en-US", { month: "numeric", day: "numeric" });
 }
 
+const CHART_HEIGHT = 120;
+
 export default function DailyDialsChart({ data }: DailyDialsChartProps) {
   const max = Math.max(...data.map((d) => d.count), 1);
 
@@ -19,12 +21,12 @@ export default function DailyDialsChart({ data }: DailyDialsChartProps) {
     <div>
       <div className="daily-bar-chart">
         {data.map(({ date, count }) => {
-          const heightPct = (count / max) * 100;
+          const heightPx = Math.round((count / max) * CHART_HEIGHT);
           return (
             <div key={date} className="daily-bar-col" title={`${shortDate(date)}: ${count} dials`}>
               <div
                 className="daily-bar"
-                style={{ height: `${Math.max(heightPct, count > 0 ? 4 : 0)}%` }}
+                style={{ height: `${Math.max(heightPx, count > 0 ? 2 : 0)}px` }}
               />
             </div>
           );
