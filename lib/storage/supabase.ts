@@ -148,8 +148,51 @@ export class SupabaseAdapter implements StorageAdapter {
   }
 
   async saveLeads(leads: Lead[]): Promise<void> {
-    for (const lead of leads) {
-      await this.saveLead(lead);
+    if (leads.length === 0) return;
+
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Not authenticated");
+
+    const CHUNK = 500;
+
+    for (let i = 0; i < leads.length; i += CHUNK) {
+      const chunk = leads.slice(i, i + CHUNK);
+      const rows = chunk.map((lead) => mapLeadToDbRow(lead, user.id));
+
+      const { error: leadsError } = await supabase
+        .from("leads")
+        .upsert(rows, { onConflict: "id" });
+      if (leadsError) throw leadsError;
+
+      const chunkIds = chunk.map((l) => l.id);
+      const { error: deleteError } = await supabase
+        .from("call_attempts")
+        .delete()
+        .in("lead_id", chunkIds);
+      if (deleteError) throw deleteError;
+
+      const attempts = chunk.flatMap((lead) =>
+        lead.history.map((attempt) => ({
+          id: attempt.id,
+          lead_id: lead.id,
+          user_id: user.id,
+          status: attempt.status,
+          notes: attempt.notes,
+          duration_seconds: attempt.durationSeconds ?? null,
+          created_at: new Date(attempt.timestamp).toISOString(),
+        }))
+      );
+
+      if (attempts.length > 0) {
+        const { error: attemptsError } = await supabase
+          .from("call_attempts")
+          .insert(attempts);
+        if (attemptsError) throw attemptsError;
+      }
     }
   }
 
