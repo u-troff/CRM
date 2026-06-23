@@ -6,6 +6,7 @@ import { Upload, Plus, Download, Database } from "lucide-react";
 import LeadTable from "@/components/leads/LeadTable";
 import ImportModal from "@/components/import/ImportModal";
 import TopBar from "@/components/layout/TopBar";
+import DailyTargetTracker from "@/components/outreach/DailyTargetTracker";
 import { Lead } from "@/types/lead";
 import { createLead } from "@/lib/leads/mutations";
 import { getCallCount, getLastContact } from "@/lib/leads/queries";
@@ -72,7 +73,7 @@ function exportToCsv(leads: Lead[], filename: string) {
 }
 
 export default function PipelinePage() {
-  const { leads, loading, error, reload, saveLead, deleteLead, saveLeads } = useLeads();
+  const { leads, loading, error, reload, saveLead, deleteLead, deleteLeads } = useLeads();
   const [showImport, setShowImport] = useState(false);
 
   const handleImportComplete = useCallback(
@@ -84,10 +85,9 @@ export default function PipelinePage() {
 
   const handleBulkDelete = useCallback(
     async (ids: string[]) => {
-      const remaining = leads.filter((l) => !ids.includes(l.id));
-      await saveLeads(remaining);
+      await deleteLeads(ids);
     },
-    [leads, saveLeads]
+    [deleteLeads]
   );
 
   const handleExportSelected = useCallback(
@@ -164,6 +164,10 @@ export default function PipelinePage() {
           Import
         </button>
       </TopBar>
+
+      <div style={{ padding: "0 24px 16px" }}>
+        <DailyTargetTracker initialData={null} />
+      </div>
 
       <div className="page-content">
         {error && <div className="error-banner">{error}</div>}

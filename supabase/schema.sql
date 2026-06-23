@@ -26,13 +26,26 @@ create table if not exists public.leads (
   current_status  text not null default 'new' check (current_status in (
     'new','no_answer','voicemail','gatekeeper','callback',
     'not_interested','nurture','discovery_booked','wrong_number',
-    'dnc','closed_won','closed_lost'
+    'dnc','closed_won','closed_lost',
+    'called','booked','sold','lost'
   )),
 
   external_id     text,
   source          text default 'manual' check (source in (
     'manual','csv_import','xlsx_import','sheets_sync'
   )),
+
+  -- Apollo / MillionVerifier import fields
+  email           text,
+  first_name      text,
+  last_name       text,
+  owner_title     text,
+  state           text,
+  email_quality   text,
+  email_result    text,
+  linkedin_link            text,
+  company_linkedin_link    text,
+  company_facebook_link    text,
 
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
@@ -52,7 +65,8 @@ create table if not exists public.call_attempts (
   status            text not null check (status in (
     'new','no_answer','voicemail','gatekeeper','callback',
     'not_interested','nurture','discovery_booked','wrong_number',
-    'dnc','closed_won','closed_lost'
+    'dnc','closed_won','closed_lost',
+    'called','booked','sold','lost'
   )),
   notes             text default '',
   duration_seconds  integer,

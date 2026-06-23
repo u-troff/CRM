@@ -11,6 +11,7 @@ import { ALL_STATUSES, STATUS_META } from "@/lib/constants/statuses";
 import { ALL_TIERS, TIER_META } from "@/lib/constants/tiers";
 import { addManualAttempt } from "@/lib/leads/mutations";
 import { Plus, AlertCircle, Trash2, ArrowLeft, ExternalLink } from "lucide-react";
+import LeadIntelligencePanel from "@/components/intelligence/LeadIntelligencePanel";
 
 interface LeadDetailClientProps {
   lead: Lead;
@@ -204,6 +205,10 @@ export default function LeadDetailClient({ lead: initialLead }: LeadDetailClient
               </div>
             );
           })}
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <LeadIntelligencePanel leadId={form.id} leadName={form.businessName} ownerName={form.ownerName} />
         </div>
 
         {/* Footer actions */}

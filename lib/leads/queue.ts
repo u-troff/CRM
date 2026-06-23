@@ -20,6 +20,10 @@ const STATUS_PRIORITY: Record<CallStatus, number> = {
   dnc: 99,
   closed_won: 99,
   closed_lost: 99,
+  called: 99,
+  booked: 99,
+  sold: 99,
+  lost: 99,
 };
 
 const TIER_PRIORITY: Record<string, number> = {

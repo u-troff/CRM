@@ -86,6 +86,16 @@ export async function addManualAttempt(
   return updated;
 }
 
+export async function updateLead(id: string, partial: Partial<Lead>): Promise<Lead> {
+  const leads = await storage.getLeads();
+  const lead = leads.find((l) => l.id === id);
+  if (!lead) throw new Error(`Lead not found: ${id}`);
+
+  const updated: Lead = { ...lead, ...partial };
+  await storage.saveLead(updated);
+  return updated;
+}
+
 export async function updateLeadField<K extends keyof Lead>(
   lead: Lead,
   field: K,

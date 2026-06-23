@@ -11,6 +11,7 @@ interface UseLeadsReturn {
   reload: () => Promise<void>;
   saveLead: (lead: Lead) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
+  deleteLeads: (ids: string[]) => Promise<void>;
   saveLeads: (leads: Lead[]) => Promise<void>;
 }
 
@@ -95,6 +96,23 @@ export function useLeads(): UseLeadsReturn {
     [load]
   );
 
+  const deleteLeads = useCallback(
+    async (ids: string[]) => {
+      setError(null);
+      setLeads((prev) => prev.filter((lead) => !ids.includes(lead.id)));
+
+      try {
+        await storage.deleteLeads(ids);
+        await load(false);
+      } catch (err) {
+        setError(getErrorMessage(err));
+        await load(true);
+        throw err;
+      }
+    },
+    [load]
+  );
+
   const saveLeads = useCallback(
     async (newLeads: Lead[]) => {
       setError(null);
@@ -112,5 +130,5 @@ export function useLeads(): UseLeadsReturn {
     [load]
   );
 
-  return { leads, loading, error, reload, saveLead, deleteLead, saveLeads };
+  return { leads, loading, error, reload, saveLead, deleteLead, deleteLeads, saveLeads };
 }

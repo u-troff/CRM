@@ -77,6 +77,26 @@ export const STATUS_META: Record<CallStatus, StatusMeta> = {
     color: "#525252",
     bgColor: "rgba(82,82,82,0.15)",
   },
+  called: {
+    label: "Called",
+    color: "#22d3ee",
+    bgColor: "rgba(34,211,238,0.15)",
+  },
+  booked: {
+    label: "Booked",
+    color: "#fbbf24",
+    bgColor: "rgba(251,191,36,0.15)",
+  },
+  sold: {
+    label: "Sold / Paid",
+    color: "#a3e635",
+    bgColor: "rgba(163,230,53,0.15)",
+  },
+  lost: {
+    label: "Lost",
+    color: "#dc2626",
+    bgColor: "rgba(220,38,38,0.15)",
+  },
 };
 
 // Statuses excluded from the dial queue

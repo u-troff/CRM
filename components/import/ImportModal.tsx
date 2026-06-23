@@ -189,7 +189,8 @@ export default function ImportModal({ onClose, onImportComplete }: ImportModalPr
                 id="paste-csv"
                 value={pastedText}
                 onChange={(e) => setPastedText(e.target.value)}
-                placeholder="Business Name,City,Phone,Website,Rating,Review Count,Is Franchise,Tier,Notes,Names,Progress"
+                placeholder="Business Name,City,Phone,Website,Rating,Review Count,Is Franchise,Tier,Notes,Names,Progress
+First Name,Last Name,Email,quality,result,Lead City,Lead State,Company Name,Company Phone Number,Company Website Full,..."
                 rows={5}
                 style={{
                   width: "100%",
@@ -267,6 +268,7 @@ export default function ImportModal({ onClose, onImportComplete }: ImportModalPr
                 <thead>
                   <tr>
                     <th>Business</th>
+                    <th>Email</th>
                     <th>Tier</th>
                     <th>Phone</th>
                     <th>City</th>
@@ -279,6 +281,19 @@ export default function ImportModal({ onClose, onImportComplete }: ImportModalPr
                     <tr key={i}>
                       <td style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {lead.businessName}
+                      </td>
+                      <td style={{
+                        maxWidth: 160,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        color: lead.emailQuality === "good"
+                          ? "var(--accent-lime)"
+                          : lead.emailQuality === "bad" || !lead.email
+                            ? "var(--accent-red)"
+                            : "var(--text-muted)",
+                      }}>
+                        {lead.email || "MISSING"}
                       </td>
                       <td>
                         <span style={{

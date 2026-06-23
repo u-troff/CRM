@@ -14,7 +14,11 @@ export type CallStatus =
   | "wrong_number"
   | "dnc"
   | "closed_won"
-  | "closed_lost";
+  | "closed_lost"
+  | "called"
+  | "booked"
+  | "sold"
+  | "lost";
 
 // ─── Core Interfaces ──────────────────────────────────────────────────────────
 
@@ -46,4 +50,15 @@ export interface Lead {
   // Reserved for future Google Sheets sync
   externalId?: string; // row ID from source sheet
   source?: "manual" | "csv_import" | "xlsx_import" | "sheets_sync";
+  // Apollo / MillionVerifier import fields
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  ownerTitle?: string;
+  state?: string;
+  emailQuality?: string; // "good" | "bad" | "unknown"
+  emailResult?: string; // "ok" | "invalid" | etc.
+  linkedinLink?: string; // owner's personal LinkedIn
+  companyLinkedinLink?: string;
+  companyFacebookLink?: string;
 }

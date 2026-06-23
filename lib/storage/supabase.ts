@@ -26,6 +26,16 @@ type DbLead = {
   current_status: Lead["currentStatus"];
   external_id: string | null;
   source: Lead["source"] | null;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  owner_title: string | null;
+  state: string | null;
+  email_quality: string | null;
+  email_result: string | null;
+  linkedin_link: string | null;
+  company_linkedin_link: string | null;
+  company_facebook_link: string | null;
   created_at: string;
   updated_at: string;
   call_attempts?: DbCallAttempt[];
@@ -48,6 +58,16 @@ function mapDbRowToLead(row: DbLead): Lead {
     currentStatus: row.current_status,
     externalId: row.external_id ?? undefined,
     source: row.source ?? "manual",
+    email: row.email ?? undefined,
+    firstName: row.first_name ?? undefined,
+    lastName: row.last_name ?? undefined,
+    ownerTitle: row.owner_title ?? undefined,
+    state: row.state ?? undefined,
+    emailQuality: row.email_quality ?? undefined,
+    emailResult: row.email_result ?? undefined,
+    linkedinLink: row.linkedin_link ?? undefined,
+    companyLinkedinLink: row.company_linkedin_link ?? undefined,
+    companyFacebookLink: row.company_facebook_link ?? undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
     history: (row.call_attempts ?? [])
@@ -82,6 +102,16 @@ function mapLeadToDbRow(lead: Lead, userId: string) {
     current_status: lead.currentStatus,
     external_id: lead.externalId ?? null,
     source: lead.source ?? "manual",
+    email: lead.email ?? null,
+    first_name: lead.firstName ?? null,
+    last_name: lead.lastName ?? null,
+    owner_title: lead.ownerTitle ?? null,
+    state: lead.state ?? null,
+    email_quality: lead.emailQuality ?? null,
+    email_result: lead.emailResult ?? null,
+    linkedin_link: lead.linkedinLink ?? null,
+    company_linkedin_link: lead.companyLinkedinLink ?? null,
+    company_facebook_link: lead.companyFacebookLink ?? null,
     created_at: new Date(lead.createdAt).toISOString(),
     updated_at: new Date(lead.updatedAt).toISOString(),
   };
@@ -199,6 +229,13 @@ export class SupabaseAdapter implements StorageAdapter {
   async deleteLead(id: string): Promise<void> {
     const supabase = createClient();
     const { error } = await supabase.from("leads").delete().eq("id", id);
+    if (error) throw error;
+  }
+
+  async deleteLeads(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("leads").delete().in("id", ids);
     if (error) throw error;
   }
 

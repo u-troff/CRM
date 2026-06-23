@@ -6,12 +6,18 @@ import {
   LayoutGrid,
   Phone,
   BarChart2,
+  Kanban,
+  Target,
+  Microscope,
   Zap,
 } from "lucide-react";
 import StatusIndicator from "./StatusIndicator";
 
 const NAV = [
   { href: "/pipeline", label: "Pipeline", icon: LayoutGrid },
+  { href: "/kanban", label: "Kanban", icon: Kanban },
+  { href: "/outreach", label: "Outreach", icon: Target },
+  { href: "/intelligence", label: "Intelligence", icon: Microscope },
   { href: "/dial", label: "Dial Mode", icon: Phone },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
 ];
