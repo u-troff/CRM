@@ -9,6 +9,7 @@ import {
   Kanban,
   Target,
   Microscope,
+  Sparkles,
   Zap,
 } from "lucide-react";
 import StatusIndicator from "./StatusIndicator";
@@ -18,6 +19,7 @@ const NAV = [
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/outreach", label: "Outreach", icon: Target },
   { href: "/intelligence", label: "Intelligence", icon: Microscope },
+  { href: "/enrich", label: "Enrich", icon: Sparkles },
   { href: "/dial", label: "Dial Mode", icon: Phone },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
 ];
