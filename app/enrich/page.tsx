@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, FileText, CheckCircle2, AlertCircle, Download, RotateCcw } from "lucide-react";
 import TopBar from "@/components/layout/TopBar";
+import AllLeadsTable from "@/components/enrich/AllLeadsTable";
 
 type Niche = "flooring" | "remodeling";
 type PageState = "idle" | "uploading" | "processing" | "complete";
@@ -41,12 +42,38 @@ export default function EnrichPage() {
         setStatusData(data);
         if (data.status === "complete" || data.status === "failed") {
           if (pollRef.current) clearInterval(pollRef.current);
+          localStorage.setItem("enrichment_job_status", "complete");
           setState("complete");
         }
       } catch {
         // keep polling
       }
     }, 3000);
+  }, []);
+
+  // Resume a job that was still running (or had just finished) before a
+  // page reload, so refreshing mid-enrichment doesn't lose the user's place.
+  useEffect(() => {
+    const savedJobId = localStorage.getItem("enrichment_job_id");
+    const savedStatus = localStorage.getItem("enrichment_job_status");
+
+    if (savedJobId && savedStatus === "processing") {
+      setJobId(savedJobId);
+      setState("processing");
+      fetch(`/api/enrich/status?job_id=${savedJobId}`)
+        .then((res) => res.json())
+        .then((data: StatusResponse) => setStatusData(data))
+        .catch(() => {});
+      pollStatus(savedJobId);
+    } else if (savedJobId && savedStatus === "complete") {
+      setJobId(savedJobId);
+      setState("complete");
+      fetch(`/api/enrich/status?job_id=${savedJobId}`)
+        .then((res) => res.json())
+        .then((data: StatusResponse) => setStatusData(data))
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleStart = useCallback(async () => {
@@ -64,6 +91,8 @@ export default function EnrichPage() {
         setState("idle");
         return;
       }
+      localStorage.setItem("enrichment_job_id", data.job_id);
+      localStorage.setItem("enrichment_job_status", "processing");
       setJobId(data.job_id);
       setState("processing");
       pollStatus(data.job_id);
@@ -74,6 +103,8 @@ export default function EnrichPage() {
   }, [niche, file, pollStatus]);
 
   const handleReset = useCallback(() => {
+    localStorage.removeItem("enrichment_job_id");
+    localStorage.removeItem("enrichment_job_status");
     setState("idle");
     setNiche(null);
     setFile(null);
@@ -275,6 +306,8 @@ export default function EnrichPage() {
             </div>
           )}
         </div>
+
+        <AllLeadsTable />
       </div>
     </>
   );

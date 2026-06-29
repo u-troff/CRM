@@ -26,9 +26,24 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: jobError?.message ?? "Job not found" }, { status: 404 });
   }
 
+  const COLUMNS = [
+    "first_name",
+    "last_name",
+    "email",
+    "company_name",
+    "lead_city",
+    "lead_state",
+    "lead_country",
+    "company_website",
+    "company_phone",
+    "niche",
+    "custom_subject",
+    "custom_intro",
+  ] as const;
+
   const { data: leads, error: leadsError } = await supabase
     .from("enrichment_leads")
-    .select("first_name, last_name, email, company_name, lead_city, lead_state, company_website, company_phone, custom_subject, custom_intro")
+    .select(COLUMNS.join(", "))
     .eq("job_id", jobId)
     .eq("enrichment_status", "done");
 
@@ -36,7 +51,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: leadsError.message }, { status: 500 });
   }
 
-  const csv = Papa.unparse(leads ?? []);
+  const csv = Papa.unparse(leads ?? [], { columns: COLUMNS as unknown as string[] });
   const date = new Date().toISOString().slice(0, 10);
 
   return new Response(csv, {

@@ -8,6 +8,7 @@ interface ApolloRow {
 
 interface MappedLead {
   job_id: string;
+  niche: "flooring" | "remodeling";
   first_name: string;
   last_name: string;
   full_name: string;
@@ -16,6 +17,7 @@ interface MappedLead {
   linkedin_url: string;
   lead_city: string;
   lead_state: string;
+  lead_country: string;
   company_name: string;
   industry: string;
   employee_count: number | null;
@@ -24,10 +26,11 @@ interface MappedLead {
   company_phone: string;
 }
 
-function mapRow(row: ApolloRow, jobId: string): MappedLead {
+function mapRow(row: ApolloRow, jobId: string, niche: "flooring" | "remodeling"): MappedLead {
   const employeeCountRaw = row["Employee Count"]?.trim();
   return {
     job_id: jobId,
+    niche,
     first_name: row["First Name"] ?? "",
     last_name: row["Last Name"] ?? "",
     full_name: row["Full Name"] ?? "",
@@ -36,6 +39,7 @@ function mapRow(row: ApolloRow, jobId: string): MappedLead {
     linkedin_url: row["LinkedIn Link"] ?? "",
     lead_city: row["Lead City"] ?? "",
     lead_state: row["Lead State"] ?? "",
+    lead_country: row["Lead Country"] ?? "",
     company_name: row["Company Name"] ?? "",
     industry: row["Industry"] ?? "",
     employee_count: employeeCountRaw ? parseInt(employeeCountRaw, 10) || null : null,
@@ -78,7 +82,7 @@ export async function POST(req: NextRequest) {
   }
 
   const leads = rows
-    .map((row) => mapRow(row, job.id))
+    .map((row) => mapRow(row, job.id, niche))
     .filter((lead) => lead.company_website.trim() !== "");
 
   if (leads.length === 0) {
