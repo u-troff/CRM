@@ -16,11 +16,27 @@ interface DialCardProps {
   onOutcome: (updated: Lead) => void;
 }
 
+function notesKey(leadId: string): string {
+  return `dial_draft_notes_${leadId}`;
+}
+
 export default function DialCard({ lead, onLeadUpdated, onOutcome }: DialCardProps) {
-  const [notes, setNotes] = useState("");
+  // Seeded from localStorage so notes typed mid-call survive navigating away
+  // (e.g. to research the lead elsewhere) and back before logging an outcome.
+  const [notes, setNotes] = useState(() =>
+    typeof window === "undefined" ? "" : window.localStorage.getItem(notesKey(lead.id)) ?? ""
+  );
   const [logging, setLogging] = useState(false);
   const [showNotes, setShowNotes] = useState(true);
   const [animate, setAnimate] = useState(false);
+
+  const handleNotesChange = useCallback(
+    (value: string) => {
+      setNotes(value);
+      window.localStorage.setItem(notesKey(lead.id), value);
+    },
+    [lead.id]
+  );
 
   const handleOutcome = useCallback(
     async (status: CallStatus) => {
@@ -29,6 +45,7 @@ export default function DialCard({ lead, onLeadUpdated, onOutcome }: DialCardPro
       try {
         const updated = await logCall(lead, status, notes);
         setNotes("");
+        window.localStorage.removeItem(notesKey(lead.id));
         setAnimate(true);
         setTimeout(() => setAnimate(false), 300);
         onOutcome(updated);
@@ -260,7 +277,7 @@ export default function DialCard({ lead, onLeadUpdated, onOutcome }: DialCardPro
         <textarea
           id="call-notes"
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e) => handleNotesChange(e.target.value)}
           placeholder="Type while on the call..."
           rows={3}
           className="form-input"

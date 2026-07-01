@@ -2,24 +2,26 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ACTIVE_LEAD_KEY } from "@/hooks/useDialSession";
 
 interface DialDeepLinkProps {
-  startIndex: number;
+  leadId: string;
 }
 
-// Client component that redirects to /dial — the session index is managed client-side
-// For MVP this is a passthrough redirect since session state lives in the hook
-export default function DialDeepLink({ startIndex }: DialDeepLinkProps) {
+// Stamps the deep-linked lead as the active dial session lead (the same
+// key useDialSession reads on mount), then hands off to /dial so it opens
+// directly on this lead instead of the front of the queue.
+export default function DialDeepLink({ leadId }: DialDeepLinkProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // TODO: When session management supports it, initialize at startIndex
+    window.localStorage.setItem(ACTIVE_LEAD_KEY, leadId);
     router.replace("/dial");
-  }, [router, startIndex]);
+  }, [router, leadId]);
 
   return (
     <div style={{ padding: 40, color: "var(--text-muted)" }}>
-      Redirecting to dial session...
+      Opening dial session...
     </div>
   );
 }

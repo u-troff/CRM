@@ -9,9 +9,10 @@ interface KanbanColumnProps {
   column: KanbanColumnDef;
   leads: Lead[];
   onDeleteLead: (id: string) => void;
+  onLeadUpdated: (updated: Lead) => void;
 }
 
-export default function KanbanColumn({ column, leads, onDeleteLead }: KanbanColumnProps) {
+export default function KanbanColumn({ column, leads, onDeleteLead, onLeadUpdated }: KanbanColumnProps) {
   return (
     <div
       style={{
@@ -72,7 +73,7 @@ export default function KanbanColumn({ column, leads, onDeleteLead }: KanbanColu
             }}
           >
             {leads.map((lead, index) => (
-              <KanbanCard key={lead.id} lead={lead} index={index} onDelete={onDeleteLead} />
+              <KanbanCard key={lead.id} lead={lead} index={index} onDelete={onDeleteLead} onLeadUpdated={onLeadUpdated} />
             ))}
             {provided.placeholder}
           </div>

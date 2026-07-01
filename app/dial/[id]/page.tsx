@@ -17,5 +17,5 @@ export default async function DialLeadPage({
     redirect("/dial");
   }
 
-  return <DialDeepLink startIndex={idx} />;
+  return <DialDeepLink leadId={id} />;
 }

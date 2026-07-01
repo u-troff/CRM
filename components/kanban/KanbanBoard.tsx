@@ -29,7 +29,7 @@ export default function KanbanBoard({ leads, loading, error, reload, onDeleteLea
 
       const column = KANBAN_COLUMNS.find((c) => c.id === destination.droppableId);
       if (!column) return;
-      const newStatus: CallStatus = column.status ?? "new";
+      const newStatus: CallStatus = column.writeStatus;
       const updatedAt = Date.now();
 
       setBoardLeads((prev) =>
@@ -51,6 +51,14 @@ export default function KanbanBoard({ leads, loading, error, reload, onDeleteLea
     [onDeleteLead, reload]
   );
 
+  const handleLeadUpdated = useCallback(
+    (updated: Lead) => {
+      setBoardLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+      reload().catch(() => {});
+    },
+    [reload]
+  );
+
   if (loading) {
     return <div style={{ color: "var(--text-muted)", fontSize: 12 }}>Loading...</div>;
   }
@@ -70,6 +78,7 @@ export default function KanbanBoard({ leads, loading, error, reload, onDeleteLea
               column={column}
               leads={boardLeads.filter((lead) => getColumnIdForStatus(lead.currentStatus) === column.id)}
               onDeleteLead={handleDelete}
+              onLeadUpdated={handleLeadUpdated}
             />
           ))}
         </div>
