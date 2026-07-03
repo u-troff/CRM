@@ -23,9 +23,12 @@ export async function POST() {
 
   const jobIds = Array.from(new Set((pending ?? []).map((l) => l.job_id)));
 
+  // See app/api/enrich/start/route.ts for ENRICHMENT_PROVIDER.
+  const enrichFunction = process.env.ENRICHMENT_PROVIDER === "apify" ? "start-enrichment" : "enrich-leads";
+
   await Promise.all(
     jobIds.map((jobId) =>
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/enrich-leads`, {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/${enrichFunction}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,

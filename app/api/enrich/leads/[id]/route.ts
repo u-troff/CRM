@@ -31,7 +31,7 @@ export async function PATCH(
   for (const field of EDITABLE_STRING_FIELDS) {
     if (typeof body[field] === "string") update[field] = body[field];
   }
-  if (body.niche === "flooring" || body.niche === "remodeling") {
+  if (body.niche === "flooring" || body.niche === "remodeling" || body.niche === "plumbing") {
     update.niche = body.niche;
   }
   if (typeof body.employee_count === "number") {

@@ -26,10 +26,17 @@ export async function GET(req: NextRequest) {
       { count: "exact" }
     );
 
-  if (niche === "flooring" || niche === "remodeling") {
+  if (niche === "flooring" || niche === "remodeling" || niche === "plumbing") {
     query = query.eq("niche", niche);
   }
-  if (status === "done" || status === "pending" || status === "processing" || status === "failed") {
+  if (
+    status === "done" ||
+    status === "pending" ||
+    status === "processing" ||
+    status === "scraping" ||
+    status === "failed" ||
+    status === "no_website"
+  ) {
     query = query.eq("enrichment_status", status);
   }
   if (search) {

@@ -1,5 +1,5 @@
-export type EnrichmentNiche = "flooring" | "remodeling";
-export type EnrichmentStatus = "pending" | "processing" | "done" | "failed";
+export type EnrichmentNiche = "flooring" | "remodeling" | "plumbing";
+export type EnrichmentStatus = "pending" | "processing" | "scraping" | "done" | "failed" | "no_website";
 
 // Row shape for the cross-job "all leads in the database" view. Supabase's
 // untyped client infers the embedded enrichment_jobs relation as an array at

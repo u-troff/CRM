@@ -142,7 +142,10 @@ export default function AllLeadsTable() {
 
       const refreshed = await fetchLeads();
       const stillRunning = refreshed.some(
-        (l) => l.enrichment_status === "pending" || l.enrichment_status === "processing"
+        (l) =>
+          l.enrichment_status === "pending" ||
+          l.enrichment_status === "processing" ||
+          l.enrichment_status === "scraping"
       );
       if (!stillRunning) setPolling(false);
     }, 5000);
@@ -386,6 +389,7 @@ export default function AllLeadsTable() {
             <option value="all">All Niches</option>
             <option value="flooring">Flooring</option>
             <option value="remodeling">Remodeling</option>
+            <option value="plumbing">Plumbing</option>
           </select>
 
           <select
@@ -398,7 +402,9 @@ export default function AllLeadsTable() {
             <option value="done">Done</option>
             <option value="pending">Pending</option>
             <option value="processing">Processing</option>
+            <option value="scraping">Scraping</option>
             <option value="failed">Failed</option>
+            <option value="no_website">No Website</option>
           </select>
         </div>
 

@@ -8,7 +8,7 @@ interface ApolloRow {
 
 interface MappedLead {
   job_id: string;
-  niche: "flooring" | "remodeling";
+  niche: "flooring" | "remodeling" | "plumbing";
   first_name: string;
   last_name: string;
   full_name: string;
@@ -26,7 +26,7 @@ interface MappedLead {
   company_phone: string;
 }
 
-function mapRow(row: ApolloRow, jobId: string, niche: "flooring" | "remodeling"): MappedLead {
+function mapRow(row: ApolloRow, jobId: string, niche: "flooring" | "remodeling" | "plumbing"): MappedLead {
   const employeeCountRaw = row["Employee Count"]?.trim();
   return {
     job_id: jobId,
@@ -64,8 +64,8 @@ export async function POST(req: NextRequest) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "file is required" }, { status: 400 });
   }
-  if (niche !== "flooring" && niche !== "remodeling") {
-    return NextResponse.json({ error: "niche must be 'flooring' or 'remodeling'" }, { status: 400 });
+  if (niche !== "flooring" && niche !== "remodeling" && niche !== "plumbing") {
+    return NextResponse.json({ error: "niche must be 'flooring', 'remodeling', or 'plumbing'" }, { status: 400 });
   }
 
   const text = await file.text();
@@ -97,7 +97,12 @@ export async function POST(req: NextRequest) {
 
   await supabase.from("enrichment_jobs").update({ total_leads: leads.length }).eq("id", job.id);
 
-  fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/enrich-leads`, {
+  // ENRICHMENT_PROVIDER toggles which Edge Function scrapes company sites —
+  // 'apify' (start-enrichment / apify-webhook-handler) or the default
+  // 'firecrawl' (enrich-leads, unchanged).
+  const enrichFunction = process.env.ENRICHMENT_PROVIDER === "apify" ? "start-enrichment" : "enrich-leads";
+
+  fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/${enrichFunction}`, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,

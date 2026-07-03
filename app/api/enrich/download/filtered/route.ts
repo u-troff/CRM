@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   // custom_subject/custom_intro to put in a Smartlead-ready file.
   let query = supabase.from("enrichment_leads").select(COLUMNS.join(", ")).eq("enrichment_status", "done");
 
-  if (niche === "flooring" || niche === "remodeling") {
+  if (niche === "flooring" || niche === "remodeling" || niche === "plumbing") {
     query = query.eq("niche", niche);
   }
   if (search) {
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
   const csv = Papa.unparse(leads ?? [], { columns: COLUMNS as unknown as string[] });
   const date = new Date().toISOString().slice(0, 10);
-  const nicheLabel = niche === "flooring" || niche === "remodeling" ? niche : "all";
+  const nicheLabel = niche === "flooring" || niche === "remodeling" || niche === "plumbing" ? niche : "all";
 
   return new Response(csv, {
     headers: {

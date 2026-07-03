@@ -3,6 +3,7 @@ import { EnrichmentNiche } from "@/types/enrichment";
 const NICHE_META: Record<EnrichmentNiche, { label: string; color: string; bg: string }> = {
   flooring: { label: "Flooring", color: "var(--accent-cyan)", bg: "rgba(34,211,238,0.15)" },
   remodeling: { label: "Remodeling", color: "var(--accent-violet)", bg: "rgba(167,139,250,0.15)" },
+  plumbing: { label: "Plumbing", color: "var(--accent-lime)", bg: "rgba(163,230,53,0.15)" },
 };
 
 export default function NichePill({ niche }: { niche: EnrichmentNiche | null }) {

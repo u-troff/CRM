@@ -9,8 +9,8 @@ const MANUAL_CSV_FILENAME = "Manually Added";
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  if (body.niche !== "flooring" && body.niche !== "remodeling") {
-    return NextResponse.json({ error: "niche must be 'flooring' or 'remodeling'" }, { status: 400 });
+  if (body.niche !== "flooring" && body.niche !== "remodeling" && body.niche !== "plumbing") {
+    return NextResponse.json({ error: "niche must be 'flooring', 'remodeling', or 'plumbing'" }, { status: 400 });
   }
 
   const companyName = typeof body.company_name === "string" ? body.company_name.trim() : "";

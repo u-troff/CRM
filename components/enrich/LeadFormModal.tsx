@@ -101,6 +101,7 @@ export default function LeadFormModal({
               >
                 <option value="flooring">Flooring</option>
                 <option value="remodeling">Remodeling</option>
+                <option value="plumbing">Plumbing</option>
               </select>
             </div>
             <div className="form-group">

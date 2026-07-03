@@ -5,7 +5,7 @@ import { Upload, FileText, CheckCircle2, AlertCircle, Download, RotateCcw } from
 import TopBar from "@/components/layout/TopBar";
 import AllLeadsTable from "@/components/enrich/AllLeadsTable";
 
-type Niche = "flooring" | "remodeling";
+type Niche = "flooring" | "remodeling" | "plumbing";
 type PageState = "idle" | "uploading" | "processing" | "complete";
 
 interface StatusResponse {
@@ -148,7 +148,7 @@ export default function EnrichPage() {
                 Niche
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-                {(["flooring", "remodeling"] as const).map((n) => (
+                {(["flooring", "remodeling", "plumbing"] as const).map((n) => (
                   <button
                     key={n}
                     className="btn-secondary"
@@ -159,7 +159,7 @@ export default function EnrichPage() {
                     }
                     onClick={() => setNiche(n)}
                   >
-                    {n === "flooring" ? "Flooring" : "Remodeling"}
+                    {n === "flooring" ? "Flooring" : n === "remodeling" ? "Remodeling" : "Plumbing"}
                   </button>
                 ))}
               </div>
