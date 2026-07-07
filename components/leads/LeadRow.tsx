@@ -5,6 +5,7 @@ import TierBadge from "./TierBadge";
 import StatusPill from "./StatusPill";
 import { Phone, Star } from "lucide-react";
 import { getCallCount, getLastContact } from "@/lib/leads/queries";
+import { NICHE_META } from "@/lib/constants/niche";
 
 interface LeadRowProps {
   lead: Lead;
@@ -62,6 +63,22 @@ export default function LeadRow({ lead, selected, onSelect, onClick }: LeadRowPr
           >
             FRAN
           </span>
+        )}
+      </td>
+      <td style={{ width: 96 }}>
+        {lead.niche ? (
+          <span
+            className="status-pill"
+            style={{
+              color: NICHE_META[lead.niche].color,
+              borderColor: "transparent",
+              background: NICHE_META[lead.niche].bg,
+            }}
+          >
+            {NICHE_META[lead.niche].label}
+          </span>
+        ) : (
+          <span style={{ color: "var(--text-faint)" }}>—</span>
         )}
       </td>
       <td style={{ width: 100, color: "var(--text-muted)", fontSize: 11 }}>

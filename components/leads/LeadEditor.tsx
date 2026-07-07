@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { X, Plus, Trash2, ExternalLink, AlertCircle } from "lucide-react";
-import { Lead, CallStatus, LeadTier, CallAttempt } from "@/types/lead";
+import { Lead, CallStatus, LeadTier, CallAttempt, Niche } from "@/types/lead";
 import { ALL_STATUSES, STATUS_META } from "@/lib/constants/statuses";
 import { ALL_TIERS, TIER_META } from "@/lib/constants/tiers";
+import { ALL_NICHES, NICHE_META } from "@/lib/constants/niche";
 import { addManualAttempt } from "@/lib/leads/mutations";
 import StatusPill from "./StatusPill";
 import TierBadge from "./TierBadge";
@@ -224,6 +225,26 @@ export default function LeadEditor({ lead, onSave, onDelete, onClose }: LeadEdit
               >
                 <option value="no">No</option>
                 <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Niche</label>
+              <select
+                className="form-select"
+                value={form.niche ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    niche: e.target.value ? (e.target.value as Niche) : null,
+                  }))
+                }
+              >
+                <option value="">Untagged</option>
+                {ALL_NICHES.map((n) => (
+                  <option key={n} value={n} style={{ color: NICHE_META[n].color }}>
+                    {NICHE_META[n].label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

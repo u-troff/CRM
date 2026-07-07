@@ -7,5 +7,6 @@ export interface StorageAdapter {
   saveLead(lead: Lead): Promise<void>;
   deleteLead(id: string): Promise<void>;
   deleteLeads(ids: string[]): Promise<void>;
+  assignNiche(ids: string[], niche: Lead["niche"]): Promise<void>;
   clearAll(): Promise<void>;
 }

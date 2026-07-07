@@ -2,6 +2,10 @@
 
 export type LeadTier = "TIER 1" | "TIER 2" | "TIER 3";
 
+// Service niche a lead belongs to. Mirrors the enrichment pipeline's niches so
+// pipeline leads can be filtered / actioned by trade.
+export type Niche = "flooring" | "remodeling" | "plumbing";
+
 export type CallStatus =
   | "new"
   | "no_answer"
@@ -44,6 +48,7 @@ export interface Lead {
   websiteNotes: string; // from "Notes" column — your audit
   ownerName: string; // from "Names" column
   currentStatus: CallStatus;
+  niche?: Niche | null; // service trade — null/undefined = untagged
   history: CallAttempt[];
   createdAt: number;
   updatedAt: number;

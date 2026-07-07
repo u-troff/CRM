@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Lead, LeadTier, CallStatus } from "@/types/lead";
-import { filterLeads, sortLeads, SortField, SortDir } from "@/lib/leads/queries";
+import { Lead, LeadTier, CallStatus, Niche } from "@/types/lead";
+import { filterLeads, sortLeads, SortField, SortDir, NicheFilter } from "@/lib/leads/queries";
 import { ALL_STATUSES, STATUS_META } from "@/lib/constants/statuses";
 import { ALL_TIERS } from "@/lib/constants/tiers";
+import { ALL_NICHES, NICHE_META } from "@/lib/constants/niche";
 import LeadRow from "./LeadRow";
 import LeadEditor from "./LeadEditor";
 import { ChevronUp, ChevronDown, Minus } from "lucide-react";
@@ -15,6 +16,7 @@ interface LeadTableProps {
   onDeleteLead: (id: string) => Promise<void>;
   onBulkDelete: (ids: string[]) => Promise<void>;
   onExportSelected: (ids: string[]) => void;
+  onAssignNiche: (ids: string[], niche: Lead["niche"]) => Promise<void>;
 }
 
 const COLUMNS: { key: SortField; label: string; title?: string }[] = [
@@ -41,16 +43,19 @@ export default function LeadTable({
   onDeleteLead,
   onBulkDelete,
   onExportSelected,
+  onAssignNiche,
 }: LeadTableProps) {
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState<LeadTier | "all">("all");
   const [statusFilter, setStatusFilter] = useState<CallStatus | "all">("all");
   const [franchiseFilter, setFranchiseFilter] = useState<boolean | "all">("all");
+  const [nicheFilter, setNicheFilter] = useState<NicheFilter>("all");
   const [sortField, setSortField] = useState<SortField>("tier");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [assigningNiche, setAssigningNiche] = useState(false);
 
   const filtered = useMemo(
     () =>
@@ -59,8 +64,9 @@ export default function LeadTable({
         tier: tierFilter,
         status: statusFilter,
         isFranchise: franchiseFilter,
+        niche: nicheFilter,
       }),
-    [leads, search, tierFilter, statusFilter, franchiseFilter]
+    [leads, search, tierFilter, statusFilter, franchiseFilter, nicheFilter]
   );
 
   const sorted = useMemo(
@@ -107,6 +113,19 @@ export default function LeadTable({
     setSelected(new Set());
     setConfirmBulkDelete(false);
   }, [selected, onBulkDelete]);
+
+  const handleAssignNiche = useCallback(
+    async (niche: Lead["niche"]) => {
+      setAssigningNiche(true);
+      try {
+        await onAssignNiche(Array.from(selected), niche);
+        setSelected(new Set());
+      } finally {
+        setAssigningNiche(false);
+      }
+    },
+    [selected, onAssignNiche]
+  );
 
   const handleSaveLead = useCallback(
     async (updated: Lead) => {
@@ -175,12 +194,44 @@ export default function LeadTable({
           <option value="true">Franchise</option>
         </select>
 
+        <select
+          className="filter-select"
+          value={nicheFilter}
+          onChange={(e) => setNicheFilter(e.target.value as NicheFilter)}
+          aria-label="Filter by niche"
+        >
+          <option value="all">All Niches</option>
+          {ALL_NICHES.map((n) => (
+            <option key={n} value={n}>{NICHE_META[n].label}</option>
+          ))}
+          <option value="untagged">Untagged</option>
+        </select>
+
         <span style={{ color: "var(--text-faint)", fontSize: 11, marginLeft: 4 }}>
           {sorted.length} / {leads.length}
         </span>
 
         {selected.size > 0 && (
-          <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+          <div style={{ display: "flex", gap: 8, marginLeft: "auto", alignItems: "center" }}>
+            <select
+              className="filter-select"
+              value=""
+              disabled={assigningNiche}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) return;
+                void handleAssignNiche(v === "clear" ? null : (v as Niche));
+                e.target.value = "";
+              }}
+              aria-label={`Assign niche to ${selected.size} selected leads`}
+              style={{ fontSize: 11 }}
+            >
+              <option value="">{assigningNiche ? "Assigning…" : `Assign niche (${selected.size})`}</option>
+              {ALL_NICHES.map((n) => (
+                <option key={n} value={n}>{NICHE_META[n].label}</option>
+              ))}
+              <option value="clear">Clear niche</option>
+            </select>
             <button
               className="btn-secondary"
               onClick={() => onExportSelected(Array.from(selected))}
@@ -216,7 +267,7 @@ export default function LeadTable({
 
       {/* Table */}
       <div style={{ overflowX: "auto", border: "1px solid var(--border-subtle)" }}>
-        <table className="data-table" style={{ tableLayout: "fixed", minWidth: 900 }}>
+        <table className="data-table" style={{ tableLayout: "fixed", minWidth: 1000 }}>
           <thead>
             <tr>
               <th style={{ width: 36, padding: "0 8px 0 12px" }}>
@@ -246,6 +297,7 @@ export default function LeadTable({
                   Business <SortIcon field="businessName" sortField={sortField} sortDir={sortDir} />
                 </div>
               </th>
+              <th style={{ width: 96 }}>Niche</th>
               <th style={{ width: 100 }}>Owner</th>
               <th style={{ width: 140 }}>Phone</th>
               <th

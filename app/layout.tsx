@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "U-Flow CRM",
@@ -15,10 +16,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="app-shell">
-          <Sidebar />
-          <div className="main-area">{children}</div>
-        </div>
+        <Providers>
+          <div className="app-shell">
+            <Sidebar />
+            <div className="main-area">{children}</div>
+          </div>
+        </Providers>
       </body>
     </html>
   );

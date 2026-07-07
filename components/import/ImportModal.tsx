@@ -6,6 +6,7 @@ import { parseCsv } from "./CsvParser";
 import { parseXlsx } from "./XlsxImporter";
 import { rowsToLeads } from "./rowToLead";
 import { upsertLeads } from "@/lib/leads/mutations";
+import { getErrorMessage } from "@/lib/errors";
 import { Lead } from "@/types/lead";
 
 interface ImportModalProps {
@@ -112,7 +113,7 @@ export default function ImportModal({ onClose, onImportComplete }: ImportModalPr
       setStep("done");
       onImportComplete(res.added, res.updated);
     } catch (e) {
-      setError(`Import failed: ${e instanceof Error ? e.message : "Unknown error"}`);
+      setError(`Import failed: ${getErrorMessage(e)}`);
     } finally {
       setLoading(false);
     }

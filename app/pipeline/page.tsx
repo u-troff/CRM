@@ -73,7 +73,8 @@ function exportToCsv(leads: Lead[], filename: string) {
 }
 
 export default function PipelinePage() {
-  const { leads, loading, error, reload, saveLead, deleteLead, deleteLeads } = useLeads();
+  const { leads, loading, error, reload, saveLead, deleteLead, deleteLeads, assignNiche } =
+    useLeads();
   const [showImport, setShowImport] = useState(false);
 
   const handleImportComplete = useCallback(
@@ -202,6 +203,7 @@ export default function PipelinePage() {
             onDeleteLead={deleteLead}
             onBulkDelete={handleBulkDelete}
             onExportSelected={handleExportSelected}
+            onAssignNiche={assignNiche}
           />
         )}
       </div>

@@ -1,4 +1,6 @@
-import { Lead, CallStatus, LeadTier } from "@/types/lead";
+import { Lead, CallStatus, LeadTier, Niche } from "@/types/lead";
+
+export type NicheFilter = Niche | "all" | "untagged";
 
 export type SortField =
   | "businessName"
@@ -17,6 +19,7 @@ export interface FilterOptions {
   tier?: LeadTier | "all";
   status?: CallStatus | "all";
   isFranchise?: boolean | "all";
+  niche?: NicheFilter;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -63,6 +66,15 @@ export function filterLeads(leads: Lead[], options: FilterOptions): Lead[] {
     // Franchise filter
     if (options.isFranchise !== undefined && options.isFranchise !== "all") {
       if (lead.isFranchise !== options.isFranchise) return false;
+    }
+
+    // Niche filter
+    if (options.niche && options.niche !== "all") {
+      if (options.niche === "untagged") {
+        if (lead.niche) return false;
+      } else if (lead.niche !== options.niche) {
+        return false;
+      }
     }
 
     return true;

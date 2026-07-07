@@ -24,6 +24,7 @@ type DbLead = {
   website_notes: string | null;
   owner_name: string | null;
   current_status: Lead["currentStatus"];
+  niche: Lead["niche"] | null;
   external_id: string | null;
   source: Lead["source"] | null;
   email: string | null;
@@ -56,6 +57,7 @@ function mapDbRowToLead(row: DbLead): Lead {
     websiteNotes: row.website_notes ?? "",
     ownerName: row.owner_name ?? "",
     currentStatus: row.current_status,
+    niche: row.niche ?? null,
     externalId: row.external_id ?? undefined,
     source: row.source ?? "manual",
     email: row.email ?? undefined,
@@ -100,6 +102,7 @@ function mapLeadToDbRow(lead: Lead, userId: string) {
     website_notes: lead.websiteNotes,
     owner_name: lead.ownerName,
     current_status: lead.currentStatus,
+    niche: lead.niche ?? null,
     external_id: lead.externalId ?? null,
     source: lead.source ?? "manual",
     email: lead.email ?? null,
@@ -120,13 +123,23 @@ function mapLeadToDbRow(lead: Lead, userId: string) {
 export class SupabaseAdapter implements StorageAdapter {
   async getLeads(): Promise<Lead[]> {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*, call_attempts(*)")
-      .order("created_at", { ascending: false });
+    // PostgREST caps each response at 1000 rows (max-rows), so page through
+    // with .range() until a short batch signals we've fetched everything.
+    const BATCH = 1000;
+    const rows: DbLead[] = [];
+    for (let from = 0; ; from += BATCH) {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*, call_attempts(*)")
+        .order("created_at", { ascending: false })
+        .range(from, from + BATCH - 1);
 
-    if (error) throw error;
-    return (data ?? []).map((row) => mapDbRowToLead(row as DbLead));
+      if (error) throw error;
+      const batch = (data ?? []) as DbLead[];
+      rows.push(...batch);
+      if (batch.length < BATCH) break;
+    }
+    return rows.map((row) => mapDbRowToLead(row));
   }
 
   async getLead(id: string): Promise<Lead | null> {
@@ -236,6 +249,16 @@ export class SupabaseAdapter implements StorageAdapter {
     if (ids.length === 0) return;
     const supabase = createClient();
     const { error } = await supabase.from("leads").delete().in("id", ids);
+    if (error) throw error;
+  }
+
+  async assignNiche(ids: string[], niche: Lead["niche"]): Promise<void> {
+    if (ids.length === 0) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("leads")
+      .update({ niche: niche ?? null, updated_at: new Date().toISOString() })
+      .in("id", ids);
     if (error) throw error;
   }
 
