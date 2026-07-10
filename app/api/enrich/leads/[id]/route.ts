@@ -17,7 +17,7 @@ const EDITABLE_STRING_FIELDS = [
   "company_linkedin",
   "company_phone",
   "custom_subject",
-  "custom_intro",
+  "custom_email",
 ] as const;
 
 export async function PATCH(

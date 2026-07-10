@@ -44,14 +44,14 @@ async function processLead(supabase: SupabaseClient, lead: EnrichmentLead) {
     const markdown = await scrapeUrl(url);
     const scrapedContent = (markdown ?? "").slice(0, SCRAPE_CHAR_LIMIT);
 
-    const { custom_subject, custom_intro } = await generateColdEmailCopy(lead, scrapedContent);
+    const { custom_subject, custom_email } = await generateColdEmailCopy(lead, scrapedContent);
 
     await supabase
       .from("enrichment_leads")
       .update({
         scraped_content: scrapedContent,
         custom_subject,
-        custom_intro,
+        custom_email,
         enrichment_status: "done",
         enriched_at: new Date().toISOString(),
       })

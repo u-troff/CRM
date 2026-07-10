@@ -20,7 +20,7 @@ const COLUMNS = [
   "company_phone",
   "niche",
   "custom_subject",
-  "custom_intro",
+  "custom_email",
   "enrichment_status",
   "enrichment_error",
 ] as const;

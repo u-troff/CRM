@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("enrichment_leads")
     .select(
-      "id, job_id, created_at, first_name, last_name, email, lead_city, lead_state, lead_country, company_name, company_website, company_phone, niche, custom_subject, custom_intro, enrichment_status, enrichment_error, enrichment_jobs(csv_filename)",
+      "id, job_id, created_at, first_name, last_name, email, lead_city, lead_state, lead_country, company_name, company_website, company_phone, niche, custom_subject, custom_email, enrichment_status, enrichment_error, enrichment_jobs(csv_filename)",
       { count: "exact" }
     );
 

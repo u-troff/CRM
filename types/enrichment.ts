@@ -20,7 +20,7 @@ export interface AllLeadsRow {
   company_phone: string | null;
   niche: EnrichmentNiche | null;
   custom_subject: string | null;
-  custom_intro: string | null;
+  custom_email: string | null;
   enrichment_status: EnrichmentStatus;
   enrichment_error: string | null;
   enrichment_jobs: { csv_filename: string | null } | { csv_filename: string | null }[] | null;

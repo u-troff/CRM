@@ -38,6 +38,14 @@ export default function EnrichPage() {
     pollRef.current = setInterval(async () => {
       try {
         const res = await fetch(`/api/enrich/status?job_id=${id}`);
+        // Job no longer exists (deleted) — stop polling instead of looping forever.
+        if (res.status === 404) {
+          if (pollRef.current) clearInterval(pollRef.current);
+          localStorage.removeItem("enrichment_job_id");
+          localStorage.removeItem("enrichment_job_status");
+          setState("idle");
+          return;
+        }
         const data: StatusResponse = await res.json();
         setStatusData(data);
         if (data.status === "complete" || data.status === "failed") {

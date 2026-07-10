@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     "company_phone",
     "niche",
     "custom_subject",
-    "custom_intro",
+    "custom_email",
   ] as const;
 
   const { data: leads, error: leadsError } = await supabase

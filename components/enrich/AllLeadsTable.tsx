@@ -124,7 +124,7 @@ export default function AllLeadsTable() {
   }, [page]);
 
   // While a run is in flight, poll for status changes — skip the tick
-  // entirely if the user is actively editing a Subject/Intro field, so we
+  // entirely if the user is actively editing a Subject/Email field, so we
   // don't blow away unsaved keystrokes or yank focus out from under them.
   // Stops automatically once nothing on the current page is still pending
   // or processing.
@@ -180,7 +180,7 @@ export default function AllLeadsTable() {
   }, []);
 
   const handleFieldChange = useCallback(
-    (id: string, field: "custom_subject" | "custom_intro", value: string) => {
+    (id: string, field: "custom_subject" | "custom_email", value: string) => {
       setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, [field]: value } : l)));
 
       const key = `${id}:${field}`;
@@ -497,7 +497,7 @@ export default function AllLeadsTable() {
                   <th>Country</th>
                   <th>Niche</th>
                   <th style={{ minWidth: 180 }}>Subject</th>
-                  <th style={{ minWidth: 240 }}>Intro</th>
+                  <th style={{ minWidth: 240 }}>Email</th>
                   <th>Status</th>
                   <th>Source CSV</th>
                   <th>Actions</th>
@@ -508,7 +508,7 @@ export default function AllLeadsTable() {
                   const rowNumber = (page - 1) * PER_PAGE + idx + 1;
                   const editableCopy = lead.enrichment_status === "done";
                   const subjectFlash = flashKeys.has(`${lead.id}:custom_subject`);
-                  const introFlash = flashKeys.has(`${lead.id}:custom_intro`);
+                  const emailFlash = flashKeys.has(`${lead.id}:custom_email`);
 
                   return (
                     <tr key={lead.id} className={selected.has(lead.id) ? "selected" : undefined}>
@@ -552,19 +552,19 @@ export default function AllLeadsTable() {
                         {editableCopy ? (
                           <textarea
                             className="form-input"
-                            rows={2}
+                            rows={5}
                             style={{
                               fontSize: 11,
                               padding: "5px 8px",
                               minHeight: 0,
-                              background: introFlash ? "rgba(163,230,53,0.12)" : "var(--bg-base)",
+                              background: emailFlash ? "rgba(163,230,53,0.12)" : "var(--bg-base)",
                               transition: "background 0.2s",
                             }}
-                            value={lead.custom_intro ?? ""}
-                            onChange={(e) => handleFieldChange(lead.id, "custom_intro", e.target.value)}
+                            value={lead.custom_email ?? ""}
+                            onChange={(e) => handleFieldChange(lead.id, "custom_email", e.target.value)}
                           />
                         ) : (
-                          <span style={{ color: "var(--text-muted)" }}>{lead.custom_intro || "—"}</span>
+                          <span style={{ color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>{lead.custom_email || "—"}</span>
                         )}
                       </td>
                       <td>

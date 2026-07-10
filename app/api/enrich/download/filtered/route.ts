@@ -16,7 +16,7 @@ const COLUMNS = [
   "company_phone",
   "niche",
   "custom_subject",
-  "custom_intro",
+  "custom_email",
 ] as const;
 
 export async function GET(req: NextRequest) {
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   );
 
   // "Enriched" always means done — a pending/failed lead has no
-  // custom_subject/custom_intro to put in a Smartlead-ready file.
+  // custom_subject/custom_email to put in a Smartlead-ready file.
   let query = supabase.from("enrichment_leads").select(COLUMNS.join(", ")).eq("enrichment_status", "done");
 
   if (niche === "flooring" || niche === "remodeling" || niche === "plumbing") {
