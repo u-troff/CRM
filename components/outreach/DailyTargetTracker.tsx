@@ -1,107 +1,38 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Minus, Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { adjustTodayCount, resetTodayCounts } from "@/lib/outreach/mutations";
-import { createClient } from "@/lib/supabase/client";
-
-const TARGET = 50;
-const TOTAL_TARGET = 150;
-const CHANNELS = [
-  { key: "emails" as const, label: "Cold Emails" },
-  { key: "dms" as const, label: "LinkedIn / DMs" },
-  { key: "calls" as const, label: "Cold Calls" },
-] as const;
-
-type Channel = (typeof CHANNELS)[number]["key"];
+import { useDailyOutreachLog } from "@/hooks/useDailyOutreachLog";
+import { CHANNELS, TOUCH_CHANNELS } from "@/lib/outreach/constants";
+import type { DailyOutreachLog } from "@/lib/outreach/queries";
+import { useState } from "react";
 
 interface DailyTargetTrackerProps {
-  initialData: { emails: number; dms: number; calls: number } | null;
+  initialData: DailyOutreachLog | null;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
-}
-
-function fillColor(value: number, target: number): string {
-  if (value >= target) return "var(--accent-lime)";
-  if (value >= target / 2) return "var(--accent-amber)";
-  return "var(--accent-red)";
+  showNotes?: boolean;
 }
 
 function todayLabel(): string {
-  return new Date().toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "Africa/Johannesburg",
+  });
 }
 
 export default function DailyTargetTracker({
   initialData,
   collapsible = false,
   defaultCollapsed = false,
+  showNotes = false,
 }: DailyTargetTrackerProps) {
-  const [counts, setCounts] = useState({
-    emails: initialData?.emails ?? 0,
-    dms: initialData?.dms ?? 0,
-    calls: initialData?.calls ?? 0,
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { counts, notes, saving, savedAt, error, adjust, setNotes, resetAll } = useDailyOutreachLog(initialData);
   const [collapsed, setCollapsed] = useState(collapsible && defaultCollapsed);
 
-  const queueRef = useRef<Record<Channel, Promise<void>>>({
-    emails: Promise.resolve(),
-    dms: Promise.resolve(),
-    calls: Promise.resolve(),
-  });
-  const inFlightCountRef = useRef(0);
-
-  // TODO: enable Supabase realtime for cross-device sync — see STEP 6 in implementation notes
-
-  // Pages that render this client-side (no server-fetched initialData) hydrate on mount.
-  useEffect(() => {
-    if (initialData) return;
-    (async () => {
-      const supabase = createClient();
-      const today = new Date().toISOString().slice(0, 10);
-      const { data } = await supabase
-        .from("outreach_targets")
-        .select("emails, dms, calls")
-        .eq("date", today)
-        .maybeSingle();
-      if (data) setCounts({ emails: data.emails, dms: data.dms, calls: data.calls });
-    })();
-  }, [initialData]);
-
-  const handleAdjust = useCallback((channel: Channel, delta: 1 | -1) => {
-    setError(null);
-    setCounts((prev) => ({ ...prev, [channel]: Math.max(0, prev[channel] + delta) }));
-
-    const previous = queueRef.current[channel];
-    const next = previous.then(async () => {
-      inFlightCountRef.current++;
-      setSaving(true);
-      try {
-        const result = await adjustTodayCount(channel, delta);
-        setCounts((prev) => ({ ...prev, [channel]: result[channel] }));
-      } catch (e) {
-        setCounts((prev) => ({ ...prev, [channel]: Math.max(0, prev[channel] - delta) }));
-        setError(e instanceof Error ? e.message : "Failed to save. Try again.");
-      } finally {
-        inFlightCountRef.current--;
-        if (inFlightCountRef.current === 0) setSaving(false);
-      }
-    });
-    queueRef.current[channel] = next;
-  }, []);
-
-  const handleReset = useCallback(async () => {
-    if (!window.confirm("Reset all of today's counts to zero?")) return;
-    try {
-      await resetTodayCounts();
-      setCounts({ emails: 0, dms: 0, calls: 0 });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to reset. Try again.");
-    }
-  }, []);
-
-  const total = counts.emails + counts.dms + counts.calls;
+  const touchTotal = TOUCH_CHANNELS.reduce((sum, key) => sum + counts[key], 0);
+  const justSaved = savedAt !== null && Date.now() - savedAt < 2000;
 
   return (
     <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", padding: 16 }}>
@@ -116,12 +47,17 @@ export default function DailyTargetTracker({
         onClick={collapsible ? () => setCollapsed((c) => !c) : undefined}
       >
         <span style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-muted)" }}>
-          Daily Targets
+          Today&apos;s Outreach
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {saving && (
             <span style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-muted)" }}>
               Saving...
+            </span>
+          )}
+          {!saving && justSaved && (
+            <span style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-lime)" }}>
+              Saved
             </span>
           )}
           <span style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-muted)" }}>
@@ -136,42 +72,24 @@ export default function DailyTargetTracker({
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {CHANNELS.map(({ key, label }) => {
               const value = counts[key];
-              const color = fillColor(value, TARGET);
               return (
-                <div key={key}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button
-                        className="icon-btn"
-                        aria-label={`Decrement ${label.toLowerCase()}`}
-                        onClick={() => handleAdjust(key, -1)}
-                        disabled={saving || value === 0}
-                      >
-                        <Minus size={12} />
-                      </button>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color, minWidth: 48, textAlign: "center" }}>
-                        {value} / {TARGET}
-                      </span>
-                      <button
-                        className="icon-btn"
-                        aria-label={`Increment ${label.toLowerCase()}`}
-                        onClick={() => handleAdjust(key, 1)}
-                        disabled={saving}
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ height: 3, background: "var(--border-subtle)", marginTop: 6 }}>
-                    <div
-                      style={{
-                        height: 3,
-                        width: `${Math.min(100, (value / TARGET) * 100)}%`,
-                        background: color,
-                        transition: "width 0.2s ease",
-                      }}
-                    />
+                <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      className="icon-btn"
+                      aria-label={`Decrement ${label.toLowerCase()}`}
+                      onClick={() => adjust(key, -1)}
+                      disabled={value === 0}
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-primary)", minWidth: 24, textAlign: "center" }}>
+                      {value}
+                    </span>
+                    <button className="icon-btn" aria-label={`Increment ${label.toLowerCase()}`} onClick={() => adjust(key, 1)}>
+                      <Plus size={12} />
+                    </button>
                   </div>
                 </div>
               );
@@ -181,27 +99,30 @@ export default function DailyTargetTracker({
           <div style={{ borderTop: "1px solid var(--border-subtle)", marginTop: 14, paddingTop: 10 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-muted)" }}>
-                Total Touches
+                Today&apos;s Total Touches
               </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: fillColor(total, TOTAL_TARGET) }}>
-                {total} / {TOTAL_TARGET}
-              </span>
-            </div>
-            <div style={{ height: 3, background: "var(--border-subtle)", marginTop: 6 }}>
-              <div
-                style={{
-                  height: 3,
-                  width: `${Math.min(100, (total / TOTAL_TARGET) * 100)}%`,
-                  background: fillColor(total, TOTAL_TARGET),
-                  transition: "width 0.2s ease",
-                }}
-              />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--accent-cyan)" }}>{touchTotal}</span>
             </div>
           </div>
 
+          {showNotes && (
+            <div style={{ marginTop: 12 }}>
+              <textarea
+                className="form-input"
+                placeholder="Notes for today..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                style={{ fontSize: 12 }}
+              />
+            </div>
+          )}
+
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
             <button
-              onClick={handleReset}
+              onClick={() => {
+                if (window.confirm("Reset all of today's counts to zero?")) resetAll();
+              }}
               style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 11, cursor: "pointer" }}
             >
               Reset today
