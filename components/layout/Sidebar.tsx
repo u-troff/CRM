@@ -11,17 +11,21 @@ import {
   Microscope,
   Sparkles,
   Zap,
+  Inbox,
+  Repeat,
 } from "lucide-react";
 import StatusIndicator from "./StatusIndicator";
 
 const NAV = [
   { href: "/pipeline", label: "Pipeline", icon: LayoutGrid },
   { href: "/kanban", label: "Kanban", icon: Kanban },
+  { href: "/inbound", label: "Inbound Leads", icon: Inbox },
   { href: "/outreach", label: "Outreach", icon: Target },
   { href: "/intelligence", label: "Intelligence", icon: Microscope },
   { href: "/enrich", label: "Enrich", icon: Sparkles },
   { href: "/dial", label: "Dial Mode", icon: Phone },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/settings/sequences", label: "Sequences", icon: Repeat },
 ];
 
 export default function Sidebar() {

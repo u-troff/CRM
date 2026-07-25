@@ -775,6 +775,61 @@ textarea.form-input {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Inbound: lead detail side panel ──────────────────────────────────────── */
+.detail-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 120;
+}
+
+.detail-panel {
+  width: 480px;
+  max-width: 100%;
+  height: 100%;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  animation: panel-slide-in 0.18s ease-out;
+}
+
+@keyframes panel-slide-in {
+  from { transform: translateX(24px); opacity: 0.4; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Full-screen panel on small viewports (phones). */
+@media (max-width: 640px) {
+  .detail-panel {
+    width: 100%;
+    border-left: none;
+  }
+}
+
+/* ─── Inbound: sequence manager layout ─────────────────────────────────────── */
+.sequence-manager-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .sequence-manager-grid {
+    grid-template-columns: 1fr;
+  }
+  .sequence-manager-grid > div:first-child {
+    border-right: none !important;
+    padding-right: 0 !important;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 16px;
+  }
+}
+
 /* ─── Analytics ────────────────────────────────────────────────────────────── */
 .bar-chart-row {
   display: flex;
