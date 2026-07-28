@@ -13,6 +13,7 @@ import {
   Zap,
   Inbox,
   Repeat,
+  Briefcase,
 } from "lucide-react";
 import StatusIndicator from "./StatusIndicator";
 
@@ -20,6 +21,7 @@ const NAV = [
   { href: "/pipeline", label: "Pipeline", icon: LayoutGrid },
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/inbound", label: "Inbound Leads", icon: Inbox },
+  { href: "/clients", label: "Clients", icon: Briefcase },
   { href: "/outreach", label: "Outreach", icon: Target },
   { href: "/intelligence", label: "Intelligence", icon: Microscope },
   { href: "/enrich", label: "Enrich", icon: Sparkles },
