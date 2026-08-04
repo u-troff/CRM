@@ -14,6 +14,8 @@ import {
   Inbox,
   Repeat,
   Briefcase,
+  Megaphone,
+  SlidersHorizontal,
 } from "lucide-react";
 import StatusIndicator from "./StatusIndicator";
 
@@ -21,6 +23,7 @@ const NAV = [
   { href: "/pipeline", label: "Pipeline", icon: LayoutGrid },
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/inbound", label: "Inbound Leads", icon: Inbox },
+  { href: "/campaigns", label: "Ad Campaigns", icon: Megaphone },
   { href: "/clients", label: "Clients", icon: Briefcase },
   { href: "/outreach", label: "Outreach", icon: Target },
   { href: "/intelligence", label: "Intelligence", icon: Microscope },
@@ -28,6 +31,7 @@ const NAV = [
   { href: "/dial", label: "Dial Mode", icon: Phone },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/settings/sequences", label: "Sequences", icon: Repeat },
+  { href: "/settings/fields", label: "Custom Fields", icon: SlidersHorizontal },
 ];
 
 export default function Sidebar() {

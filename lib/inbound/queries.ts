@@ -19,6 +19,14 @@ type DbInboundLead = {
   source_detail: string | null;
   notes: string | null;
   stage: InboundLead["stage"];
+  campaign_id: string | null;
+  qualification_status: InboundLead["qualificationStatus"];
+  disqualification_reason: string | null;
+  outcome_status: InboundLead["outcomeStatus"];
+  qualified_at: string | null;
+  booked_at: string | null;
+  won_at: string | null;
+  custom_fields: unknown;
   next_followup_at: string | null;
   sequence_id: string | null;
   sequence_step: number | null;
@@ -69,6 +77,14 @@ export function mapLead(row: DbInboundLead): InboundLead {
     sourceDetail: row.source_detail,
     notes: row.notes,
     stage: row.stage,
+    campaignId: row.campaign_id,
+    qualificationStatus: row.qualification_status,
+    disqualificationReason: row.disqualification_reason,
+    outcomeStatus: row.outcome_status,
+    qualifiedAt: row.qualified_at,
+    bookedAt: row.booked_at,
+    wonAt: row.won_at,
+    customFields: row.custom_fields ?? {},
     nextFollowupAt: row.next_followup_at,
     sequenceId: row.sequence_id,
     sequenceStep: row.sequence_step ?? 0,

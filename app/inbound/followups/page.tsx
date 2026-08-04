@@ -6,6 +6,8 @@ import { ArrowLeft, CalendarClock } from "lucide-react";
 import { InboundLead } from "@/types/inbound";
 import { useInboundLeads } from "@/hooks/useInboundLeads";
 import { useNurture } from "@/hooks/useNurture";
+import { useAdCampaigns } from "@/hooks/useAdCampaigns";
+import { useInvalidateCampaignReport } from "@/hooks/useCampaignReport";
 import { isFollowupDue, isFollowupOverdue, formatFollowupDate } from "@/lib/inbound/date";
 import { STAGE_LABELS } from "@/lib/constants/inbound";
 import TopBar from "@/components/layout/TopBar";
@@ -15,6 +17,8 @@ import LeadDetailPanel from "@/components/inbound/LeadDetailPanel";
 export default function FollowUpsPage() {
   const { leads, loading, error, patchLead } = useInboundLeads();
   const { sequences, steps } = useNurture();
+  const { campaigns } = useAdCampaigns();
+  const invalidateReport = useInvalidateCampaignReport();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const due = useMemo(
@@ -131,9 +135,13 @@ export default function FollowUpsPage() {
           lead={selectedLead}
           sequences={sequences}
           steps={steps}
+          campaigns={campaigns}
           initialTab="nurture"
           onClose={() => setSelectedId(null)}
-          onLeadUpdated={(updated) => patchLead(updated)}
+          onLeadUpdated={(updated) => {
+            patchLead(updated);
+            invalidateReport();
+          }}
         />
       )}
     </>

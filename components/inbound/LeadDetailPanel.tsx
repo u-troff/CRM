@@ -4,19 +4,24 @@ import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { InboundLead, NurtureSequence, NurtureStep } from "@/types/inbound";
+import { AdCampaign } from "@/types/ads";
 import { STAGE_LABELS } from "@/lib/constants/inbound";
 import { activityQueryKey } from "@/hooks/useNurture";
+import { useClientRevenue } from "@/hooks/useClientRevenue";
+import { entriesForLead } from "@/lib/revenue/queries";
+import RevenueEntriesPanel from "@/components/revenue/RevenueEntriesPanel";
 import SourceTag from "./SourceTag";
 import DetailsTab from "./DetailsTab";
 import NurtureTab from "./NurtureTab";
 import ActivityTab from "./ActivityTab";
 
-export type DetailTab = "details" | "nurture" | "activity";
+export type DetailTab = "details" | "nurture" | "revenue" | "activity";
 
 interface LeadDetailPanelProps {
   lead: InboundLead;
   sequences: NurtureSequence[];
   steps: NurtureStep[];
+  campaigns: AdCampaign[];
   initialTab?: DetailTab;
   onClose: () => void;
   onLeadUpdated: (updated: InboundLead) => void;
@@ -25,6 +30,7 @@ interface LeadDetailPanelProps {
 const TABS: { id: DetailTab; label: string }[] = [
   { id: "details", label: "Details" },
   { id: "nurture", label: "Nurture" },
+  { id: "revenue", label: "Revenue" },
   { id: "activity", label: "Activity" },
 ];
 
@@ -32,12 +38,19 @@ export default function LeadDetailPanel({
   lead,
   sequences,
   steps,
+  campaigns,
   initialTab = "details",
   onClose,
   onLeadUpdated,
 }: LeadDetailPanelProps) {
   const [tab, setTab] = useState<DetailTab>(initialTab);
   const queryClient = useQueryClient();
+  const { entries } = useClientRevenue();
+
+  // Revenue defaults to the currency the lead's campaign is billed in — a SA
+  // campaign's clients pay in rand — falling back to ZAR when it came from
+  // somewhere unpaid.
+  const campaign = campaigns.find((c) => c.id === lead.campaignId) ?? null;
 
   const reloadActivity = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: activityQueryKey(lead.id) });
@@ -117,7 +130,9 @@ export default function LeadDetailPanel({
 
         {/* Body */}
         <div style={{ padding: 16, overflowY: "auto", flex: 1 }}>
-          {tab === "details" && <DetailsTab lead={lead} onLeadUpdated={onLeadUpdated} />}
+          {tab === "details" && (
+            <DetailsTab lead={lead} campaigns={campaigns} onLeadUpdated={onLeadUpdated} />
+          )}
           {tab === "nurture" && (
             <NurtureTab
               lead={lead}
@@ -125,6 +140,13 @@ export default function LeadDetailPanel({
               steps={steps}
               onLeadUpdated={onLeadUpdated}
               onActivityChanged={reloadActivity}
+            />
+          )}
+          {tab === "revenue" && (
+            <RevenueEntriesPanel
+              leadId={lead.id}
+              entries={entriesForLead(entries, lead.id)}
+              defaultCurrency={campaign?.currency ?? "ZAR"}
             />
           )}
           {tab === "activity" && <ActivityTab leadId={lead.id} />}

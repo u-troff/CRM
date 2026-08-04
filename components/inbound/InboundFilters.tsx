@@ -1,21 +1,30 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { LeadSource } from "@/types/inbound";
+import { LeadSource, QualificationStatus } from "@/types/inbound";
+import { AdCampaign } from "@/types/ads";
 import { SOURCES } from "@/lib/constants/inbound";
+import { QUALIFICATION_STATUSES } from "@/lib/constants/ads";
 
 export interface InboundFilterState {
   search: string;
   source: LeadSource | "all";
+  campaignId: string | "all" | "none";
+  qualification: QualificationStatus | "all";
   followupDue: boolean;
 }
 
 interface InboundFiltersProps {
   value: InboundFilterState;
+  campaigns: AdCampaign[];
   onChange: (next: InboundFilterState) => void;
 }
 
-export default function InboundFilters({ value, onChange }: InboundFiltersProps) {
+export default function InboundFilters({
+  value,
+  campaigns,
+  onChange,
+}: InboundFiltersProps) {
   return (
     <div className="toolbar" style={{ marginBottom: 12 }}>
       <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -40,6 +49,40 @@ export default function InboundFilters({ value, onChange }: InboundFiltersProps)
       >
         <option value="all">All sources</option>
         {SOURCES.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.label}
+          </option>
+        ))}
+      </select>
+
+      {/* Only worth showing once there are campaigns to filter by. */}
+      {campaigns.length > 0 && (
+        <select
+          className="filter-select"
+          value={value.campaignId}
+          onChange={(e) => onChange({ ...value, campaignId: e.target.value })}
+          aria-label="Filter by campaign"
+        >
+          <option value="all">All campaigns</option>
+          <option value="none">No campaign</option>
+          {campaigns.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      )}
+
+      <select
+        className="filter-select"
+        value={value.qualification}
+        onChange={(e) =>
+          onChange({ ...value, qualification: e.target.value as QualificationStatus | "all" })
+        }
+        aria-label="Filter by qualification"
+      >
+        <option value="all">Any qualification</option>
+        {QUALIFICATION_STATUSES.map((s) => (
           <option key={s.id} value={s.id}>
             {s.label}
           </option>

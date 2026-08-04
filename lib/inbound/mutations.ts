@@ -8,6 +8,7 @@ import {
   NurtureStep,
 } from "@/types/inbound";
 import { addDays } from "./date";
+import { milestoneStamps, outcomeForStage, qualificationForStage } from "./outcome";
 import { mapLead, stepsForSequence } from "./queries";
 
 async function requireUserId(): Promise<string> {
@@ -47,6 +48,38 @@ export async function logActivity(params: {
 }
 
 // ── Lead CRUD ────────────────────────────────────────────────────────────────
+// The editable fields, minus the milestone timestamps — those are derived from
+// the two status fields by milestoneStamps() and added by each caller, which
+// has to supply the lead's current stamps to preserve them.
+function toLeadRow(input: InboundLeadInput) {
+  return {
+    full_name: input.fullName.trim(),
+    email: nullify(input.email),
+    phone: nullify(input.phone),
+    website: nullify(input.website),
+    business_name: nullify(input.businessName),
+    city: nullify(input.city),
+    source: input.source,
+    source_detail: nullify(input.sourceDetail),
+    notes: nullify(input.notes),
+    campaign_id: input.campaignId,
+    qualification_status: input.qualificationStatus,
+    // The reason only belongs to an unqualified lead — re-qualifying one drops
+    // the stale "wrong vertical" rather than leaving it to confuse the report.
+    disqualification_reason:
+      input.qualificationStatus === "unqualified"
+        ? nullify(input.disqualificationReason)
+        : null,
+    outcome_status: input.outcomeStatus,
+    // Already merged with whatever the row carried (see lib/custom/values.ts) —
+    // jsonb columns are replaced wholesale, not patched key by key.
+    custom_fields: input.customFields,
+    next_followup_at: input.nextFollowupAt,
+  };
+}
+
+const NO_MILESTONES = { qualifiedAt: null, bookedAt: null, wonAt: null };
+
 export async function createInboundLead(
   input: InboundLeadInput
 ): Promise<InboundLead> {
@@ -57,17 +90,9 @@ export async function createInboundLead(
     .from("inbound_leads")
     .insert({
       user_id: userId,
-      full_name: input.fullName.trim(),
-      email: nullify(input.email),
-      phone: nullify(input.phone),
-      website: nullify(input.website),
-      business_name: nullify(input.businessName),
-      city: nullify(input.city),
-      source: input.source,
-      source_detail: nullify(input.sourceDetail),
-      notes: nullify(input.notes),
+      ...toLeadRow(input),
       stage: "new",
-      next_followup_at: input.nextFollowupAt,
+      ...milestoneStamps(NO_MILESTONES, input),
     })
     .select("*")
     .single();
@@ -76,26 +101,17 @@ export async function createInboundLead(
   return mapLead(data);
 }
 
+// Takes the whole lead, not just its id: the milestone timestamps are computed
+// from the ones it already carries.
 export async function updateInboundLead(
-  id: string,
+  lead: InboundLead,
   input: InboundLeadInput
 ): Promise<InboundLead> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("inbound_leads")
-    .update({
-      full_name: input.fullName.trim(),
-      email: nullify(input.email),
-      phone: nullify(input.phone),
-      website: nullify(input.website),
-      business_name: nullify(input.businessName),
-      city: nullify(input.city),
-      source: input.source,
-      source_detail: nullify(input.sourceDetail),
-      notes: nullify(input.notes),
-      next_followup_at: input.nextFollowupAt,
-    })
-    .eq("id", id)
+    .update({ ...toLeadRow(input), ...milestoneStamps(lead, input) })
+    .eq("id", lead.id)
     .select("*")
     .single();
 
@@ -109,24 +125,44 @@ export async function deleteInboundLead(id: string): Promise<void> {
   if (error) throw error;
 }
 
-// Move a card between columns. Persists the stage and records a stage_change.
+// Move a card between columns. Persists the stage, re-derives the reporting
+// status the new column implies, stamps any milestone reached, and records a
+// stage_change. Returns the saved lead so the caller can replace its optimistic
+// copy with the derived values.
 export async function updateLeadStage(
-  id: string,
-  newStage: InboundStage,
-  prevStage: InboundStage
-): Promise<void> {
+  lead: InboundLead,
+  newStage: InboundStage
+): Promise<InboundLead> {
   const supabase = createClient();
-  const { error } = await supabase
+  const prevStage = lead.stage;
+
+  const outcomeStatus = outcomeForStage(newStage);
+  // null means the new column says nothing about qualification, so whatever was
+  // set by hand stands.
+  const qualificationStatus =
+    qualificationForStage(newStage) ?? lead.qualificationStatus;
+
+  const { data, error } = await supabase
     .from("inbound_leads")
-    .update({ stage: newStage })
-    .eq("id", id);
+    .update({
+      stage: newStage,
+      outcome_status: outcomeStatus,
+      qualification_status: qualificationStatus,
+      disqualification_reason:
+        qualificationStatus === "unqualified" ? lead.disqualificationReason : null,
+      ...milestoneStamps(lead, { qualificationStatus, outcomeStatus }),
+    })
+    .eq("id", lead.id)
+    .select("*")
+    .single();
   if (error) throw error;
 
   await logActivity({
-    leadId: id,
+    leadId: lead.id,
     type: "stage_change",
     content: `${prevStage} → ${newStage}`,
   });
+  return mapLead(data);
 }
 
 // Free-form note from the Activity tab.

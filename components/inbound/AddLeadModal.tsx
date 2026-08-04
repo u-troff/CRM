@@ -3,11 +3,17 @@
 import { useState, useCallback } from "react";
 import { X } from "lucide-react";
 import { InboundLeadInput, LeadSource } from "@/types/inbound";
+import { AdCampaign } from "@/types/ads";
+import { CustomFieldValue, CustomFieldValues } from "@/types/custom";
+import { useCustomFields } from "@/hooks/useCustomFields";
+import { writeValues } from "@/lib/custom/values";
+import CustomFieldInputs from "@/components/custom/CustomFieldInputs";
 import { SOURCES } from "@/lib/constants/inbound";
 import { dateInputToIso } from "@/lib/inbound/date";
 import { getErrorMessage } from "@/lib/errors";
 
 interface AddLeadModalProps {
+  campaigns: AdCampaign[];
   onClose: () => void;
   onCreate: (input: InboundLeadInput) => Promise<void>;
 }
@@ -21,6 +27,7 @@ interface FormState {
   source: LeadSource;
   sourceDetail: string;
   notes: string;
+  campaignId: string;
   followupDate: string; // YYYY-MM-DD
 }
 
@@ -33,16 +40,26 @@ const EMPTY: FormState = {
   source: "facebook",
   sourceDetail: "",
   notes: "",
+  campaignId: "",
   followupDate: "",
 };
 
-export default function AddLeadModal({ onClose, onCreate }: AddLeadModalProps) {
+export default function AddLeadModal({
+  campaigns,
+  onClose,
+  onCreate,
+}: AddLeadModalProps) {
   const [form, setForm] = useState<FormState>(EMPTY);
+  const { definitions } = useCustomFields("inbound_leads");
+  const [customValues, setCustomValues] = useState<CustomFieldValues>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: val }));
+
+  const setCustom = (fieldKey: string, value: CustomFieldValue) =>
+    setCustomValues((v) => ({ ...v, [fieldKey]: value }));
 
   const handleSave = useCallback(async () => {
     if (!form.fullName.trim() || saving) return;
@@ -59,6 +76,13 @@ export default function AddLeadModal({ onClose, onCreate }: AddLeadModalProps) {
         source: form.source,
         sourceDetail: form.sourceDetail,
         notes: form.notes,
+        campaignId: form.campaignId || null,
+        // A new lead has not been judged or worked yet — both statuses start at
+        // their defaults and move as the card does.
+        qualificationStatus: "pending",
+        disqualificationReason: "",
+        outcomeStatus: "new",
+        customFields: writeValues(definitions, {}, customValues),
         nextFollowupAt: dateInputToIso(form.followupDate),
       });
       onClose();
@@ -66,7 +90,7 @@ export default function AddLeadModal({ onClose, onCreate }: AddLeadModalProps) {
       setError(getErrorMessage(e, "Could not create lead."));
       setSaving(false);
     }
-  }, [form, saving, onCreate, onClose]);
+  }, [form, saving, definitions, customValues, onCreate, onClose]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -158,7 +182,34 @@ export default function AddLeadModal({ onClose, onCreate }: AddLeadModalProps) {
                 onChange={(e) => set("followupDate", e.target.value)}
               />
             </div>
+            {/* Set this now and the lead counts towards that campaign's cost
+                per lead from the moment it lands. */}
+            <div className="form-group">
+              <label className="form-label">Ad Campaign</label>
+              <select
+                className="form-select"
+                value={form.campaignId}
+                onChange={(e) => set("campaignId", e.target.value)}
+              >
+                <option value="">None (not from a paid ad)</option>
+                {campaigns.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          {definitions.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <CustomFieldInputs
+                definitions={definitions}
+                values={customValues}
+                onChange={setCustom}
+              />
+            </div>
+          )}
 
           <div className="form-group" style={{ marginBottom: 16 }}>
             <label className="form-label">Notes</label>
